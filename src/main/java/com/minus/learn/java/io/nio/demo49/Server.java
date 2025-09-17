@@ -5,10 +5,6 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Iterator;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * NIO网络编程应用实例：群聊系统-服务端
@@ -23,9 +19,6 @@ public class Server {
     private ServerSocketChannel ssChannel;
     private static final int PORT = 9999;
 
-    // 补充：线程池
-    private ExecutorService executor;
-
     //构造器：初始化工作
     public Server() {
         try {
@@ -39,15 +32,6 @@ public class Server {
             selector = Selector.open();
             // 5、将通道都注册到选择器上去，并且开始指定监听接收事件
             ssChannel.register(selector, SelectionKey.OP_ACCEPT);
-
-            // 补充：线程池
-            executor = new ThreadPoolExecutor(
-                    3,
-                    3,
-                    120L,
-                    TimeUnit.SECONDS,
-                    new ArrayBlockingQueue<>(1000)
-            );
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -77,9 +61,7 @@ public class Server {
                         //提示
                     } else if (sk.isReadable()) {
                         //处理读 (专门写方法..)
-//                        readData(sk);
-                        // 改用线程池异步处理
-                        executor.execute(() -> readData(sk));
+                        readData(sk);
                     }
 
                     // 处理完毕之后需要移除当前事件
